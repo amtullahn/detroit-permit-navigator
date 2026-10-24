@@ -15,6 +15,7 @@ import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as GlossaryRouteImport } from './routes/glossary'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MapRouteImport } from './routes/map'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
@@ -50,6 +51,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAgentRoute = ApiAgentRouteImport.update({
   id: '/api/agent',
   path: '/api/agent',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/glossary': typeof GlossaryRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/api/agent': typeof ApiAgentRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/glossary': typeof GlossaryRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/api/agent': typeof ApiAgentRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/glossary': typeof GlossaryRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/api/agent': typeof ApiAgentRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/help'
     | '/login'
+    | '/map'
     | '/api/agent'
     | '/projects/$id'
     | '/projects/new'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/help'
     | '/login'
+    | '/map'
     | '/api/agent'
     | '/projects/$id'
     | '/projects/new'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/glossary'
     | '/help'
     | '/login'
+    | '/map'
     | '/api/agent'
     | '/projects/$id'
     | '/projects/new'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   GlossaryRoute: typeof GlossaryRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
+  MapRoute: typeof MapRoute
   ApiAgentRoute: typeof ApiAgentRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/agent': {
       id: '/api/agent'
       path: '/api/agent'
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   GlossaryRoute: GlossaryRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
+  MapRoute: MapRoute,
   ApiAgentRoute: ApiAgentRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
