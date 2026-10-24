@@ -2,6 +2,6 @@
 
 - [x] Stage 1: Frontend, database, auth, RLS, mock tools + mock agent, SECURITY.md, frontend key scan
 - [x] Building-status map: table, open-data sync, /map page, admin manual parcels (initial sync not yet run)
-- [ ] Stage 2: Real open-data adapters and tools 1–6 (field names verified live Oct 24, see docs/dataset-fields.md; adapters not yet written)
+- [x] Stage 2: Real open-data adapters for tools 1–6 (src/lib/detroit-tools.server.ts, live-tested Oct 24)
 - [ ] Stage 3: Real Gemma agent (blocked: user adds GEMMA_API_KEY as a secret)
 - [ ] Stage 4: Drafting + email flow (blocked: user adds EMAIL_PROVIDER_KEY)
