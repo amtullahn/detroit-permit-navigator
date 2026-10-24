@@ -29,29 +29,43 @@ export async function llmGenerate(opts: {
 }): Promise<{ parts: LlmPart[] }> {
   const key = process.env["GEMMA_API_KEY"];
   if (!key) throw new LlmUnavailable("The assistant is not configured yet.");
-  let res: Response;
-  const t0 = Date.now();
-  try {
-    res = await fetch(ENDPOINT, {
-      method: "POST",
-      signal: AbortSignal.timeout(120_000),
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: opts.system }] },
-        contents: opts.contents,
-        tools: opts.tools?.length ? [{ functionDeclarations: opts.tools }] : undefined,
-        generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
-      }),
-    });
-  } catch (e) {
-    console.error("llm fetch failed after", Date.now() - t0, "ms;", e);
+  const payload = JSON.stringify({
+    systemInstruction: { parts: [{ text: opts.system }] },
+    contents: opts.contents,
+    tools: opts.tools?.length ? [{ functionDeclarations: opts.tools }] : undefined,
+    generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
+  });
+  // The provider occasionally returns transient 429/5xx or stalls; retry those with backoff.
+  let res: Response | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const t0 = Date.now();
+    try {
+      res = await fetch(ENDPOINT, {
+        method: "POST",
+        signal: AbortSignal.timeout(120_000),
+        headers: { "content-type": "application/json", "x-goog-api-key": key },
+        body: payload,
+      });
+    } catch (e) {
+      res = null;
+      console.error("llm fetch failed after", Date.now() - t0, "ms;", e);
+      if (attempt < 2) {
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+        continue;
+      }
+      throw new LlmUnavailable("The assistant is temporarily unavailable. Please try again in a few minutes.");
+    }
+    if (res.ok || (res.status !== 429 && res.status < 500)) break;
+    console.error("llm transient", res.status, Date.now() - t0, "ms");
+    if (attempt < 2) {
+      const retryAfter = Number(res.headers.get("retry-after"));
+      await new Promise((r) => setTimeout(r, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 3000 * (attempt + 1)));
+    }
+  }
+  if (!res || !res.ok) {
+    console.error("llm http error", res?.status, (await res?.text().catch(() => ""))?.slice(0, 500));
     throw new LlmUnavailable("The assistant is temporarily unavailable. Please try again in a few minutes.");
   }
-  if (!res.ok) {
-    console.error("llm http error", res.status, Date.now() - t0, "ms;", (await res.text().catch(() => "")).slice(0, 500));
-    throw new LlmUnavailable("The assistant is temporarily unavailable. Please try again in a few minutes.");
-  }
-  console.log("llm ok", Date.now() - t0, "ms", opts.contents.length, "contents");
   const j = (await res.json()) as { candidates?: { content?: { parts?: LlmPart[] } }[] };
   return { parts: j.candidates?.[0]?.content?.parts ?? [] };
 }
