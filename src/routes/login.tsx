@@ -65,10 +65,27 @@ function Login() {
             <Label htmlFor="email">Email address</Label>
             <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" />
           </div>
-          {state === "error" && <p role="alert" className="text-sm text-destructive">We couldn't send the link. Please try again in a minute.</p>}
+          {mode === "password" && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="h-11" autoComplete="current-password" />
+            </div>
+          )}
+          {state === "error" && (
+            <p role="alert" className="text-sm text-destructive">
+              {mode === "password" ? "We couldn't sign you in. Check your email and password and try again." : "We couldn't send the link. Please try again in a minute."}
+            </p>
+          )}
           <Button type="submit" className="h-11 w-full" disabled={state === "sending"}>
-            {state === "sending" ? "Sending…" : "Email me a sign-in link"}
+            {state === "sending" ? (mode === "password" ? "Signing in…" : "Sending…") : mode === "password" ? "Sign in" : "Email me a sign-in link"}
           </Button>
+          <button
+            type="button"
+            onClick={() => { setMode(mode === "link" ? "password" : "link"); setState("idle"); }}
+            className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            {mode === "link" ? "Sign in with password instead" : "Sign in with an email link instead"}
+          </button>
         </form>
       )}
     </div>
