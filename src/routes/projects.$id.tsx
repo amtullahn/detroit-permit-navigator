@@ -98,7 +98,7 @@ function ProjectPage() {
 
   const sources: PanelSource[] = [
     ...chatSources.map((s) => ({ key: `c${s.id}`, title: s.title, publisher: s.publisher, url: s.url, date: s.retrieved_at, cite: s.id })),
-    ...[parcel.source, blockers.source, history.source].map((s) => ({ key: s.title, title: s.title, publisher: s.publisher, url: s.url, date: s.fetched_at })),
+    ...(ov?.allSources ?? []).map((s) => ({ key: s.title, title: s.title, publisher: s.publisher, url: s.url, date: s.fetched_at })),
     ...steps.map((s) => ({ key: s.id, title: s.approval_name, publisher: s.office ?? NOT_SPECIFIED, url: s.source_url, date: s.last_verified_at })),
   ];
 
@@ -124,33 +124,39 @@ function ProjectPage() {
           <section aria-labelledby="parcel-h" className="rounded-xl border bg-card p-6 shadow-soft">
             <div className="flex items-center justify-between">
               <h2 id="parcel-h" className="text-xl font-semibold">Parcel lookup</h2>
-              <span className="eyebrow rounded bg-muted px-2 py-0.5">Mock data</span>
+              <span className="eyebrow rounded bg-muted px-2 py-0.5">Live city data</span>
             </div>
-            <dl className="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2">
-              {[
-                ["Parcel ID", parcel.parcel_id],
-                ["Zoning district", parcel.zoning_district],
-                ["Building status", parcel.building_status],
-                ["Land bank owned", parcel.land_bank_owned ? "Yes" : "No"],
-                ["Historic district", parcel.historic_overlap],
-                ["Past permits", history.permits.map((h) => `${h.id} · ${h.type}`).join(", ")],
-              ].map(([k, v]) => (
-                <div key={k}><dt className="text-sm text-muted-foreground">{k}</dt><dd className="font-medium">{v}</dd></div>
-              ))}
-            </dl>
-            <div className="mt-6 grid gap-4 border-t pt-5 sm:grid-cols-2">
-              <div>
-                <p className="text-sm text-muted-foreground">Use check</p>
-                <p className="mt-1 flex items-center gap-2 text-lg font-semibold text-warning"><Landmark className="h-5 w-5" aria-hidden /> {use.result}</p>
-                <p className="text-sm">Ordinance section: {use.ordinance_section}</p>
-                {use.flags.map((f) => <p key={f} className="text-sm text-muted-foreground"><GlossaryText text={f} /></p>)}
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Blockers</p>
-                <p className="mt-1 flex items-center gap-2 text-lg font-semibold text-success"><CheckCircle2 className="h-5 w-5" aria-hidden /> {blockers.open_blight_tickets} open blight tickets</p>
-                <p className="text-sm"><GlossaryText text={`Certificate of Compliance: ${blockers.certificate_of_compliance}`} /></p>
-              </div>
-            </div>
+            {overview.isLoading && <p className="mt-6 text-muted-foreground">Checking city open data…</p>}
+            {!overview.isLoading && !ov && <p className="mt-6 text-muted-foreground">City open data is unavailable right now. Try again later.</p>}
+            {ov && (
+              <>
+                <dl className="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                  {[
+                    ["Parcel ID", parcel?.parcel_id ?? (ov.parcel as { error?: string }).error ?? NOT_SPECIFIED],
+                    ["Zoning district", parcel && "zoning_district" in parcel ? parcel.zoning_district : NOT_SPECIFIED],
+                    ["Building status", parcel && "building_status" in parcel ? parcel.building_status : NOT_SPECIFIED],
+                    ["Land bank owned", parcel && "land_bank_owned" in parcel ? (parcel.land_bank_owned === null ? NOT_SPECIFIED : parcel.land_bank_owned ? "Yes" : "No") : NOT_SPECIFIED],
+                    ["Historic district", parcel && "historic_overlap" in parcel ? parcel.historic_overlap : NOT_SPECIFIED],
+                    ["Past permits", history && "permits" in history ? (history.permits.length ? history.permits.map((h) => `${h.id} · ${h.type}`).join(", ") : "None found in source") : NOT_SPECIFIED],
+                  ].map(([k, v]) => (
+                    <div key={k}><dt className="text-sm text-muted-foreground">{k}</dt><dd className="font-medium">{v}</dd></div>
+                  ))}
+                </dl>
+                <div className="mt-6 grid gap-4 border-t pt-5 sm:grid-cols-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Use check</p>
+                    <p className="mt-1 flex items-center gap-2 text-lg font-semibold text-warning"><Landmark className="h-5 w-5" aria-hidden /> Confirm with the city</p>
+                    <p className="text-sm">Ordinance section: {use && "ordinance_section" in use ? use.ordinance_section : NOT_SPECIFIED}</p>
+                    {(use && "flags" in use ? use.flags : []).map((f) => <p key={f} className="text-sm text-muted-foreground"><GlossaryText text={f} /></p>)}
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Blockers</p>
+                    <p className="mt-1 flex items-center gap-2 text-lg font-semibold text-success"><CheckCircle2 className="h-5 w-5" aria-hidden /> {blockers && "open_blight_tickets" in blockers && blockers.open_blight_tickets !== null ? `${blockers.open_blight_tickets} open blight tickets (approx.)` : "Blight tickets: not specified in source"}</p>
+                    <p className="text-sm"><GlossaryText text={`Certificate of Compliance: ${blockers && "certificate_of_compliance" in blockers ? blockers.certificate_of_compliance : NOT_SPECIFIED}`} /></p>
+                  </div>
+                </div>
+              </>
+            )}
           </section>
 
           <section aria-labelledby="check-h">
