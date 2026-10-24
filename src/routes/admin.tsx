@@ -58,7 +58,7 @@ function RulesAdmin() {
       last_verified_at: f.last_verified_at ? new Date(f.last_verified_at).toISOString() : null, is_sample: false,
     };
     const { error } = f.id ? await supabase.from("rules").update(row).eq("id", f.id) : await supabase.from("rules").insert(row);
-    if (error) return toast.error("Couldn't save the rule.");
+    if (error) { toast.error("Couldn't save the rule."); return; }
     toast.success("Rule saved");
     setF(EMPTY_RULE);
     qc.invalidateQueries();
@@ -110,7 +110,7 @@ function ContactsAdmin() {
       channel_value: editing.channel_value || null, source_url: editing.source_url || null, notes: editing.notes || null,
       last_verified_at: editing.last_verified_at ? new Date(editing.last_verified_at).toISOString() : null,
     }).eq("id", editing.id);
-    if (error) return toast.error("Couldn't save the contact.");
+    if (error) { toast.error("Couldn't save the contact."); return; }
     toast.success("Contact saved");
     setEditing(null);
     qc.invalidateQueries({ queryKey: ["contacts"] });

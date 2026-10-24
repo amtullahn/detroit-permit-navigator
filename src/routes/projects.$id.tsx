@@ -65,7 +65,7 @@ function ProjectPage() {
   });
   const { data: config } = useQuery(configQuery);
   const { data: contacts } = useQuery(contactsQuery);
-  const staleDays = Number(config?.stale_days ?? 90);
+  const staleDays = Number(config?.["stale_days"] ?? 90);
   const [chatSources, setChatSources] = useState<ChatSource[]>([]);
   const [cite, setCite] = useState<number | null>(null);
 
@@ -268,7 +268,7 @@ function SubmissionLog({ projectId }: { projectId: string }) {
       reminder_date: form.reminder_date || null,
       notes: form.notes || null,
     });
-    if (error) return toast.error("Couldn't save that entry.");
+    if (error) { toast.error("Couldn't save that entry."); return; }
     setForm({ ...form, action: "", notes: "", reminder_date: "" });
     qc.invalidateQueries({ queryKey: ["log", projectId] });
   }

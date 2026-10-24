@@ -76,7 +76,7 @@ export function ProjectChat({
 
   async function rate(m: Msg, rating: 1 | -1) {
     const { error } = await supabase.from("feedback").insert({ message_id: m.id, rating });
-    if (error) return toast.error("Couldn't save your feedback.");
+    if (error) { toast.error("Couldn't save your feedback."); return; }
     setMessages((all) => all.map((x) => (x.id === m.id ? { ...x, rated: rating } : x)));
   }
 
