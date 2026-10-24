@@ -17,6 +17,7 @@ import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
+import { Route as ApiLlmDebugRouteImport } from './routes/api/llm-debug'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
@@ -61,6 +62,11 @@ const ApiAgentRoute = ApiAgentRouteImport.update({
   path: '/api/agent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLlmDebugRoute = ApiLlmDebugRouteImport.update({
+  id: '/api/llm-debug',
+  path: '/api/llm-debug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/api/agent': typeof ApiAgentRoute
+  '/api/llm-debug': typeof ApiLlmDebugRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/api/agent': typeof ApiAgentRoute
+  '/api/llm-debug': typeof ApiLlmDebugRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects': typeof ProjectsIndexRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/api/agent': typeof ApiAgentRoute
+  '/api/llm-debug': typeof ApiLlmDebugRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/map'
     | '/api/agent'
+    | '/api/llm-debug'
     | '/projects/$id'
     | '/projects/new'
     | '/projects/'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/map'
     | '/api/agent'
+    | '/api/llm-debug'
     | '/projects/$id'
     | '/projects/new'
     | '/projects'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/map'
     | '/api/agent'
+    | '/api/llm-debug'
     | '/projects/$id'
     | '/projects/new'
     | '/projects/'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MapRoute: typeof MapRoute
   ApiAgentRoute: typeof ApiAgentRoute
+  ApiLlmDebugRoute: typeof ApiLlmDebugRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/llm-debug': {
+      id: '/api/llm-debug'
+      path: '/api/llm-debug'
+      fullPath: '/api/llm-debug'
+      preLoaderRoute: typeof ApiLlmDebugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/': {
       id: '/projects/'
       path: '/projects'
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MapRoute: MapRoute,
   ApiAgentRoute: ApiAgentRoute,
+  ApiLlmDebugRoute: ApiLlmDebugRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
