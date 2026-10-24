@@ -73,8 +73,8 @@ export const DATASETS: Record<string, DatasetDef> = {
     outFields: ["parcel_id", "name", "inventory_status_socrata", "longitude", "latitude"],
     sourceUrl: "https://hub.arcgis.com/datasets/848bc665295f4ca9b1e25068ffa88ab0_0",
     status: () => "dlba_available",
-    detail: (a) => str(a.inventory_status_socrata),
-    address: (a) => str(a.name),
+    detail: (a) => str(a["inventory_status_socrata"]),
+    address: (a) => str(a["name"]),
   },
   dlba_for_sale: {
     key: "dlba_for_sale",
@@ -84,8 +84,8 @@ export const DATASETS: Record<string, DatasetDef> = {
     outFields: ["parcel_id", "address", "program", "listing_date", "longitude", "latitude"],
     sourceUrl: `${BASE}/DLBA_For_Sale/FeatureServer/0`,
     status: () => "dlba_available",
-    detail: (a) => ["Listed for sale", str(a.program), str(a.listing_date)].filter(Boolean).join(" · ") || null,
-    address: (a) => str(a.address),
+    detail: (a) => ["Listed for sale", str(a["program"]), str(a["listing_date"])].filter(Boolean).join(" · ") || null,
+    address: (a) => str(a["address"]),
   },
   dlba_project_sales: {
     key: "dlba_project_sales",
@@ -95,8 +95,8 @@ export const DATASETS: Record<string, DatasetDef> = {
     outFields: ["parcel_id", "address", "sale_closed_date", "sale_program", "longitude", "latitude"],
     sourceUrl: `${BASE}/dlba_project_sales/FeatureServer/0`,
     status: () => "sold",
-    detail: (a) => ["Sold", str(a.sale_closed_date), str(a.sale_program)].filter(Boolean).join(" · ") || "Sold by DLBA",
-    address: (a) => str(a.address),
+    detail: (a) => ["Sold", str(a["sale_closed_date"]), str(a["sale_program"])].filter(Boolean).join(" · ") || "Sold by DLBA",
+    address: (a) => str(a["address"]),
   },
   dlba_own_it_now_sales: {
     key: "dlba_own_it_now_sales",
@@ -106,8 +106,8 @@ export const DATASETS: Record<string, DatasetDef> = {
     outFields: ["parcel_id", "address", "sale_closed_date", "sale_program", "longitude", "latitude"],
     sourceUrl: `${BASE}/dlba_own_it_now_sales/FeatureServer/0`,
     status: () => "sold",
-    detail: (a) => ["Sold", str(a.sale_closed_date), str(a.sale_program)].filter(Boolean).join(" · ") || "Sold by DLBA",
-    address: (a) => str(a.address),
+    detail: (a) => ["Sold", str(a["sale_closed_date"]), str(a["sale_program"])].filter(Boolean).join(" · ") || "Sold by DLBA",
+    address: (a) => str(a["address"]),
   },
   // Currently returns zero rows (all buildings are "Current"), kept so the scope is easy to extend.
   buildings_noncurrent: {
@@ -119,8 +119,8 @@ export const DATASETS: Record<string, DatasetDef> = {
     outFields: ["parcel_id", "status", "also_known_as"],
     sourceUrl: "https://baseunits.detroitmi.gov",
     useGeometry: true,
-    status: (a) => BUILDING_STATUS_MAP[str(a.status) ?? ""] ?? "unknown",
-    detail: (a) => (str(a.status) ? `Building status: ${str(a.status)}` : null),
+    status: (a) => BUILDING_STATUS_MAP[str(a["status"]) ?? ""] ?? "unknown",
+    detail: (a) => (str(a["status"]) ? `Building status: ${str(a["status"])}` : null),
   },
 };
 
@@ -150,8 +150,8 @@ function ringCentroid(geometry: unknown): { lat: number; lng: number } | null {
   let sx = 0;
   let sy = 0;
   for (const pt of ring) {
-    sx += pt[0];
-    sy += pt[1];
+    sx += pt[0] ?? 0;
+    sy += pt[1] ?? 0;
   }
   return { lng: sx / ring.length, lat: sy / ring.length };
 }
@@ -187,7 +187,7 @@ export async function fetchArcGisPage(
   const rows: SyncRow[] = [];
   for (const f of j.features ?? []) {
     const a = f.attributes ?? {};
-    const parcelId = str(a.parcel_id);
+    const parcelId = str(a["parcel_id"]);
     if (!parcelId) continue;
     let lat: number | null = null;
     let lng: number | null = null;
@@ -196,8 +196,8 @@ export async function fetchArcGisPage(
       lat = c?.lat ?? null;
       lng = c?.lng ?? null;
     } else {
-      lat = num(a.latitude);
-      lng = num(a.longitude);
+      lat = num(a["latitude"]);
+      lng = num(a["longitude"]);
     }
     rows.push({
       parcel_id: parcelId,

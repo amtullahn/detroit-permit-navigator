@@ -109,7 +109,8 @@ export function MapView() {
       return;
     }
     const first = hits.find((r) => r.lat != null && r.lng != null) ?? null;
-    setSelected(hits[0]);
+    const top = hits[0];
+    if (top) setSelected(top);
     if (first) setFlyTarget({ lat: first.lat as number, lng: first.lng as number });
   }
 

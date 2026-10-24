@@ -37,7 +37,7 @@ export const syncBuildingStatus = createServerFn({ method: "POST" })
       .eq("role", "admin");
     if (!roles?.length) throw new Error("Admins only");
 
-    const def = DATASETS[data.dataset];
+    const def = DATASETS[data.dataset]!;
     let offset = data.offset;
     let done = false;
     const collected = new Map<string, SyncRow>();
