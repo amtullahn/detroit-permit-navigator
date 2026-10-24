@@ -50,7 +50,9 @@ function Login() {
     <div className="mx-auto max-w-md px-6 py-24">
       <p className="eyebrow">Sign in</p>
       <h1 className="mt-2 text-3xl font-bold">We'll email you a link</h1>
-      <p className="mt-2 text-muted-foreground">No password needed. Your projects stay private to your account.</p>
+      <p className="mt-2 text-muted-foreground">
+        {mode === "link" ? "No password needed. Your projects stay private to your account." : "Sign in with your email and password."}
+      </p>
       {state === "sent" ? (
         <div role="status" className="mt-8 rounded-lg border bg-amber-soft p-5">
           <Mail className="h-5 w-5 text-primary" aria-hidden />
