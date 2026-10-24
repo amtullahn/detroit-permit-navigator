@@ -4,6 +4,7 @@
 
 export interface LlmPart {
   text?: string;
+  thought?: boolean;
   functionCall?: { name: string; args?: Record<string, unknown> };
   functionResponse?: { name: string; response: Record<string, unknown> };
 }

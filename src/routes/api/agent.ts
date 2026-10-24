@@ -126,7 +126,7 @@ export const Route = createFileRoute("/api/agent")({
             contents.push({ role: "model", parts });
             const calls = parts.filter((p): p is LlmPart & { functionCall: { name: string; args?: Record<string, unknown> } } => !!p.functionCall);
             if (!calls.length) {
-              answer = parts.map((p) => p.text ?? "").join("").trim();
+              answer = parts.filter((p) => !p.thought).map((p) => p.text ?? "").join("").trim();
               break;
             }
             const responseParts: LlmPart[] = [];
