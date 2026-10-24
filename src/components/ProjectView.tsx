@@ -17,8 +17,7 @@ import { getDemoOverview } from "@/lib/detroit-tools.functions";
 
 type PanelSource = { key: string; title: string; publisher: string; url: string | null; date: string | null; cite?: number };
 
-function ProjectPage() {
-  const { id } = Route.useParams();
+export function ProjectView({ id, demo = false }: { id: string; demo?: boolean }) {
   const qc = useQueryClient();
   const project = useQuery({
     queryKey: ["project", id],
@@ -39,6 +38,7 @@ function ProjectPage() {
     },
   });
   const checklist = useQuery({
+    enabled: !demo,
     queryKey: ["checklist", id],
     queryFn: async () => {
       const { data } = await supabase.from("project_checklists").select("step_state").eq("project_id", id).maybeSingle();
@@ -52,9 +52,9 @@ function ProjectPage() {
   const [cite, setCite] = useState<number | null>(null);
   const overview = useQuery({
     enabled: !!p,
-    queryKey: ["overview", id],
+    queryKey: ["overview", id, demo],
     staleTime: 5 * 60_000,
-    queryFn: () => getProjectOverview({ data: { address: p!.address, parcel_id: p!.parcel_id, intended_use: p!.intended_use } }),
+    queryFn: () => demo ? getDemoOverview() : getProjectOverview({ data: { address: p!.address, parcel_id: p!.parcel_id, intended_use: p!.intended_use } }),
   });
 
   if (project.isLoading) return <p className="py-20 text-center text-muted-foreground">Loading…</p>;
@@ -72,6 +72,7 @@ function ProjectPage() {
   const liaison = contacts?.find((c) => c.name.includes("District Business Liaisons"));
 
   async function toggle(stepId: string, v: boolean) {
+    if (demo) return;
     const next = { ...state, [stepId]: v };
     qc.setQueryData(["checklist", id], next);
     const { error } = await supabase.from("project_checklists").upsert({ project_id: id, step_state: next, updated_at: new Date().toISOString() });
@@ -86,9 +87,16 @@ function ProjectPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-10">
-      <div className="no-print">
-        <Link to="/projects" className="text-sm text-muted-foreground hover:text-foreground">← My projects</Link>
-      </div>
+      {demo ? (
+        <div role="note" className="no-print flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-muted px-4 py-3">
+          <p className="font-semibold">Demo project: sample data</p>
+          <Link to="/login" className="text-sm font-medium text-primary hover:underline">Sign in to create your own project →</Link>
+        </div>
+      ) : (
+        <div className="no-print">
+          <Link to="/projects" className="text-sm text-muted-foreground hover:text-foreground">← My projects</Link>
+        </div>
+      )}
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">{PROJECT_TYPES.find((t) => t.value === p.project_type)?.label} · {p.intended_use}{p.size ? ` · ${p.size}` : ""}</p>
@@ -159,7 +167,7 @@ function ProjectPage() {
                 return (
                   <li key={s.id} className="rounded-xl border bg-card p-6 shadow-soft">
                     <div className="flex items-start gap-4">
-                      <Checkbox id={`s-${s.id}`} checked={!!state[s.id]} onCheckedChange={(v) => toggle(s.id, v === true)} className="mt-1.5 h-5 w-5" aria-label={`Mark step ${i + 1} done`} />
+                      <Checkbox id={`s-${s.id}`} checked={!!state[s.id]} disabled={demo} onCheckedChange={(v) => toggle(s.id, v === true)} className="mt-1.5 h-5 w-5" aria-label={`Mark step ${i + 1} done`} />
                       <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-mono text-sm text-muted-foreground">Step {i + 1}</span>
@@ -189,9 +197,18 @@ function ProjectPage() {
             </ol>
           </section>
 
-          <div className="no-print"><ProjectChat projectId={id} onSources={setChatSources} onCite={setCite} /></div>
+          <div className="no-print">
+            {demo ? (
+              <section aria-label="Assistant" className="rounded-xl border bg-card p-6 text-center shadow-soft">
+                <h2 className="text-xl font-semibold">Ask the assistant</h2>
+                <Link to="/login" className="mt-2 inline-block font-medium text-primary hover:underline">Sign in to use the assistant</Link>
+              </section>
+            ) : (
+              <ProjectChat projectId={id} onSources={setChatSources} onCite={setCite} />
+            )}
+          </div>
           <FirmPicker />
-          <SubmissionLog projectId={id} />
+          {!demo && <SubmissionLog projectId={id} />}
         </div>
 
         <aside aria-label="Sources" className="lg:sticky lg:top-24 lg:self-start">

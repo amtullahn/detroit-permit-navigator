@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GlossaryRouteImport } from './routes/glossary'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
@@ -34,6 +35,11 @@ const AdminRoute = AdminRouteImport.update({
 const ContactsRoute = ContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GlossaryRoute = GlossaryRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
+  '/demo': typeof DemoRoute
   '/glossary': typeof GlossaryRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
+  '/demo': typeof DemoRoute
   '/glossary': typeof GlossaryRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/contacts': typeof ContactsRoute
+  '/demo': typeof DemoRoute
   '/glossary': typeof GlossaryRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/contacts'
+    | '/demo'
     | '/glossary'
     | '/help'
     | '/login'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/contacts'
+    | '/demo'
     | '/glossary'
     | '/help'
     | '/login'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/contacts'
+    | '/demo'
     | '/glossary'
     | '/help'
     | '/login'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   ContactsRoute: typeof ContactsRoute
+  DemoRoute: typeof DemoRoute
   GlossaryRoute: typeof GlossaryRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/contacts'
       fullPath: '/contacts'
       preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/glossary': {
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ContactsRoute: ContactsRoute,
+  DemoRoute: DemoRoute,
   GlossaryRoute: GlossaryRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
