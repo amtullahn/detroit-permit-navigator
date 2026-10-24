@@ -30,6 +30,7 @@ export async function llmGenerate(opts: {
   const key = process.env["GEMMA_API_KEY"];
   if (!key) throw new LlmUnavailable("The assistant is not configured yet.");
   let res: Response;
+  const t0 = Date.now();
   try {
     res = await fetch(ENDPOINT, {
       method: "POST",
@@ -43,13 +44,14 @@ export async function llmGenerate(opts: {
       }),
     });
   } catch (e) {
-    console.error("llm fetch failed", e);
+    console.error("llm fetch failed after", Date.now() - t0, "ms;", e);
     throw new LlmUnavailable("The assistant is temporarily unavailable. Please try again in a few minutes.");
   }
   if (!res.ok) {
-    console.error("llm http error", res.status, await res.text().catch(() => ""));
+    console.error("llm http error", res.status, Date.now() - t0, "ms;", (await res.text().catch(() => "")).slice(0, 500));
     throw new LlmUnavailable("The assistant is temporarily unavailable. Please try again in a few minutes.");
   }
+  console.log("llm ok", Date.now() - t0, "ms", opts.contents.length, "contents");
   const j = (await res.json()) as { candidates?: { content?: { parts?: LlmPart[] } }[] };
   return { parts: j.candidates?.[0]?.content?.parts ?? [] };
 }
