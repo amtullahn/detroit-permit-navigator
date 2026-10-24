@@ -39,7 +39,7 @@ async function arcQuery(
   const j = (await res.json()) as { features?: { attributes?: Attrs }[]; error?: unknown };
   if (j.error) throw new Error("open data query error");
   const rows = (j.features ?? []).map((f) => f.attributes ?? {});
-  cache.set(url, rows);
+  cache.set(url, { at: Date.now(), rows });
   return rows;
 }
 
