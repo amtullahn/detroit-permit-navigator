@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { configQuery, contactsQuery, firmsQuery, GUIDANCE_NOTICE, isStale, NOT_SPECIFIED, PROJECT_TYPES, verifiedLabel } from "@/lib/reference";
-import { mockBlockers, mockCheckUse, mockLookupParcel, mockPermitHistory } from "@/lib/mock-tools";
+import { getProjectOverview } from "@/lib/detroit-tools.functions";
 
 export const Route = createFileRoute("/projects/$id")({
   head: () => ({
@@ -68,14 +68,21 @@ function ProjectPage() {
   const staleDays = Number(config?.["stale_days"] ?? 90);
   const [chatSources, setChatSources] = useState<ChatSource[]>([]);
   const [cite, setCite] = useState<number | null>(null);
+  const overview = useQuery({
+    enabled: !!p,
+    queryKey: ["overview", id],
+    staleTime: 5 * 60_000,
+    queryFn: () => getProjectOverview({ data: { address: p!.address, parcel_id: p!.parcel_id, intended_use: p!.intended_use } }),
+  });
 
   if (project.isLoading) return <p className="py-20 text-center text-muted-foreground">Loading…</p>;
   if (!p) return <p className="py-20 text-center">Project not found. <Link to="/projects" className="text-primary underline">Back to projects</Link></p>;
 
-  const parcel = mockLookupParcel(p);
-  const use = mockCheckUse();
-  const blockers = mockBlockers();
-  const history = mockPermitHistory();
+  const ov = overview.data;
+  const parcel = ov?.parcel && !("error" in ov.parcel) ? ov.parcel : null;
+  const use = ov?.use && !("error" in ov.use) ? ov.use : null;
+  const blockers = ov?.blockers && !("error" in ov.blockers) ? ov.blockers : null;
+  const history = ov?.history && !("error" in ov.history) ? ov.history : null;
   const state = checklist.data ?? {};
   const steps = rules.data ?? [];
   const done = steps.filter((s) => state[s.id]).length;
