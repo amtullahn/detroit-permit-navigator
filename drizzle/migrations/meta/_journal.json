@@ -15,6 +15,13 @@
       "when": 1792862361770,
       "tag": "0001_create_building_status",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792865148909,
+      "tag": "0002_public_demo_project_read",
+      "breakpoints": true
     }
   ]
 }
