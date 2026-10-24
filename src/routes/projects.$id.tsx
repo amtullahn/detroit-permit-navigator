@@ -235,24 +235,47 @@ function ProjectPage() {
 function FirmPicker() {
   const { data } = useQuery(firmsQuery);
   const [picked, setPicked] = useState<string[]>([]);
+  const firms = data ?? [];
+  const isConstruction = (f: { discipline: string | null }) => /contractor|construction/i.test(f.discipline ?? "");
+  const groups = [
+    { title: "Architects & engineers", items: firms.filter((f) => !isConstruction(f)) },
+    { title: "Construction firms", items: firms.filter((f) => isConstruction(f)) },
+  ];
   return (
     <section aria-labelledby="firms-h" className="rounded-xl border bg-card p-6 shadow-soft">
-      <div className="flex items-center gap-2"><Building2 className="h-5 w-5 text-primary" aria-hidden /><h2 id="firms-h" className="text-xl font-semibold">Architecture & engineering firms</h2></div>
-      <p className="mt-1 text-sm text-muted-foreground">Starting points from published project coverage, not endorsements or a complete list. Choose up to three.</p>
-      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-        {data?.map((f) => {
-          const on = picked.includes(f.id);
-          return (
-            <li key={f.id}>
-              <label className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${on ? "border-accent bg-amber-soft" : ""}`}>
-                <Checkbox checked={on} disabled={!on && picked.length >= 3} onCheckedChange={(v) => setPicked(v ? [...picked, f.id] : picked.filter((x) => x !== f.id))} className="mt-1" />
-                <span><span className="font-medium">{f.name}</span><span className="block text-sm text-muted-foreground">{f.discipline} · {f.documented_detroit_work}</span></span>
-              </label>
-            </li>
-          );
-        })}
-      </ul>
-      <ul className="mt-4 space-y-2 text-sm">
+      <div className="flex items-center gap-2"><Building2 className="h-5 w-5 text-primary" aria-hidden /><h2 id="firms-h" className="text-xl font-semibold">Architecture, engineering &amp; construction firms</h2></div>
+      <p className="mt-1 text-sm text-muted-foreground">Starting points from published coverage, not endorsements or a complete list. Choose up to three.</p>
+      {groups.map((g) =>
+        g.items.length > 0 && (
+          <div key={g.title} className="mt-5">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.title}</h3>
+            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+              {g.items.map((f) => {
+                const on = picked.includes(f.id);
+                return (
+                  <li key={f.id} className={`rounded-lg border p-3 ${on ? "border-accent bg-amber-soft" : ""}`}>
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <Checkbox checked={on} disabled={!on && picked.length >= 3} onCheckedChange={(v) => setPicked(v ? [...picked, f.id] : picked.filter((x) => x !== f.id))} className="mt-1" />
+                      <span className="min-w-0">
+                        <span className="font-medium">{f.name}</span>
+                        <span className="block text-sm text-muted-foreground">{f.discipline}</span>
+                        {f.likely_fit && <span className="mt-1 block text-sm text-muted-foreground">{f.likely_fit}</span>}
+                      </span>
+                    </label>
+                    {f.source_url && (
+                      <a href={f.source_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 pl-7 text-xs text-primary hover:underline">
+                        Source<ExternalLink className="h-3 w-3" aria-hidden />
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ),
+      )}
+      <ul className="mt-5 space-y-2 text-sm">
+        <li className="rule-amber pl-3">Get at least two bids and check a contractor's Michigan builder or electrical/mechanical license at <a className="text-primary underline" href="https://www.michigan.gov/licenselookup" target="_blank" rel="noreferrer">michigan.gov/licenselookup</a>.</li>
         <li className="rule-amber pl-3">Michigan licenses individuals, not firms. Look up the person who will seal your drawings at <a className="text-primary underline" href="https://www.michigan.gov/licenselookup" target="_blank" rel="noreferrer">michigan.gov/licenselookup</a></li>
         <li className="rule-amber pl-3">The city's site plan checklist requires plans sealed by an architect or engineer licensed in Michigan.</li>
       </ul>
