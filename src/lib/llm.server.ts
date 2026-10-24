@@ -33,7 +33,7 @@ export async function llmGenerate(opts: {
   try {
     res = await fetch(ENDPOINT, {
       method: "POST",
-      signal: AbortSignal.timeout(25_000),
+      signal: AbortSignal.timeout(60_000),
       headers: { "content-type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: opts.system }] },
