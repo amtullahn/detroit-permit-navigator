@@ -7,6 +7,7 @@ Every BSEED dataset carries `parcel_id` and `address_id`, so the join path is:
 address → Parcels → `parcel_id` → all other datasets.
 
 ## Parcels (Current) — `parcel_file_current` (Office of the Assessor)
+NOTE: `Parcels_Current` is a DIFFERENT, older service (parcel_number/zoning/historic_designation). Adapters use `parcel_file_current`.
 Fields used by lookup_parcel: `parcel_id`, `address`, `zoning_district`,
 `local_historic_district`, `is_improved`, `num_buildings`, `tax_status`,
 `property_class_description`, `use_code_description`, `year_built`,
