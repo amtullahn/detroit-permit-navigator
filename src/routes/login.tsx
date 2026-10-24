@@ -21,12 +21,24 @@ export const Route = createFileRoute("/login")({
 });
 
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"link" | "password">("link");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setState("sending");
+    if (mode === "password") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setState("error");
+      } else {
+        navigate({ to: "/projects" });
+      }
+      return;
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${window.location.origin}/projects` },
