@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/llm-debug")({
             method: "POST",
             signal: AbortSignal.timeout(45_000),
             headers: { "content-type": "application/json", "x-goog-api-key": key },
-            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Say OK" }] }] }),
+            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Say OK" }] }], generationConfig: { maxOutputTokens: 800, thinkingConfig: { thinkingBudget: 0 } } }),
           });
           const text = await res.text();
           return Response.json({ status: res.status, ms: Date.now() - t0, body: text.slice(0, 400) });
