@@ -41,6 +41,51 @@ export type Database = {
         }
         Relationships: []
       }
+      building_status: {
+        Row: {
+          address: string | null
+          id: string
+          last_synced_at: string | null
+          lat: number | null
+          lng: number | null
+          manual_override: boolean
+          owner_name: string | null
+          parcel_id: string
+          source: string | null
+          source_url: string | null
+          status: string
+          status_detail: string | null
+        }
+        Insert: {
+          address?: string | null
+          id?: string
+          last_synced_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          manual_override?: boolean
+          owner_name?: string | null
+          parcel_id: string
+          source?: string | null
+          source_url?: string | null
+          status?: string
+          status_detail?: string | null
+        }
+        Update: {
+          address?: string | null
+          id?: string
+          last_synced_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          manual_override?: boolean
+          owner_name?: string | null
+          parcel_id?: string
+          source?: string | null
+          source_url?: string | null
+          status?: string
+          status_detail?: string | null
+        }
+        Relationships: []
+      }
       config: {
         Row: {
           key: string
