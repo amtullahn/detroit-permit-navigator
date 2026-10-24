@@ -7,6 +7,7 @@ import { GUIDANCE_NOTICE } from "@/lib/reference";
 const NAV = [
   { to: "/", label: "Home" },
   { to: "/projects", label: "My Projects" },
+  { to: "/map", label: "Map" },
   { to: "/contacts", label: "Contacts" },
   { to: "/glossary", label: "Glossary" },
   { to: "/help", label: "Help" },

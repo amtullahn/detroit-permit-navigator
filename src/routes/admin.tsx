@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { contactsQuery } from "@/lib/reference";
+import { SYNC_DATASETS, syncBuildingStatus } from "@/lib/building-status.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -35,9 +36,16 @@ function Admin() {
       <p className="eyebrow">Admin</p>
       <h1 className="mt-2 text-4xl font-bold">Rules library & contacts</h1>
       <Tabs defaultValue="rules" className="mt-8">
-        <TabsList><TabsTrigger value="rules">Rules</TabsTrigger><TabsTrigger value="contacts">Contacts</TabsTrigger></TabsList>
+        <TabsList>
+          <TabsTrigger value="rules">Rules</TabsTrigger>
+          <TabsTrigger value="contacts">Contacts</TabsTrigger>
+          <TabsTrigger value="map-sync">Map sync</TabsTrigger>
+          <TabsTrigger value="manual-parcels">Manual parcels</TabsTrigger>
+        </TabsList>
         <TabsContent value="rules"><RulesAdmin /></TabsContent>
         <TabsContent value="contacts"><ContactsAdmin /></TabsContent>
+        <TabsContent value="map-sync"><MapSyncAdmin /></TabsContent>
+        <TabsContent value="manual-parcels"><ManualParcelAdmin /></TabsContent>
       </Tabs>
     </div>
   );
@@ -135,5 +143,149 @@ function ContactsAdmin() {
         </li>
       ))}
     </ul>
+  );
+}
+
+function MapSyncAdmin() {
+  const [log, setLog] = useState<Record<string, string>>({});
+  const [running, setRunning] = useState(false);
+
+  async function run(key: string) {
+    setRunning(true);
+    let offset = 0;
+    let upserted = 0;
+    let scanned = 0;
+    try {
+      for (;;) {
+        const r = await syncBuildingStatus({ data: { dataset: key, offset } });
+        upserted += r.upserted;
+        scanned += r.scanned;
+        offset = r.nextOffset;
+        setLog((l) => ({ ...l, [key]: `Working… scanned ${scanned.toLocaleString()}, saved ${upserted.toLocaleString()}` }));
+        if (r.done) break;
+      }
+      setLog((l) => ({ ...l, [key]: `Done. Scanned ${scanned.toLocaleString()}, saved ${upserted.toLocaleString()}.` }));
+    } catch {
+      setLog((l) => ({ ...l, [key]: "Failed partway. Run it again to continue." }));
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  async function runAll() {
+    for (const d of SYNC_DATASETS) await run(d.key);
+  }
+
+  return (
+    <div className="mt-6 space-y-4 rounded-xl border bg-card p-5">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="font-semibold">Sync from city open data</h2>
+          <p className="text-sm text-muted-foreground">
+            Pulls land bank and building status datasets into the map. Manually entered parcels are never overwritten.
+          </p>
+        </div>
+        <Button onClick={runAll} disabled={running}>{running ? "Syncing…" : "Refresh all"}</Button>
+      </div>
+      <ul className="space-y-2">
+        {SYNC_DATASETS.map((d) => (
+          <li key={d.key} className="flex items-center justify-between gap-4 rounded-lg border p-3">
+            <div>
+              <span className="font-medium">{d.label}</span>
+              {log[d.key] && <span className="block text-sm text-muted-foreground" aria-live="polite">{log[d.key]}</span>}
+            </div>
+            <Button size="sm" variant="outline" onClick={() => run(d.key)} disabled={running}>Refresh</Button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+const EMPTY_PARCEL = { parcel_id: "", address: "", lat: "", lng: "", status: "for_sale_private", status_detail: "", owner_name: "", source_url: "" };
+
+function ManualParcelAdmin() {
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ["manual-parcels"],
+    queryFn: async () =>
+      (await supabase.from("building_status").select("*").eq("manual_override", true).order("last_synced_at", { ascending: false })).data ?? [],
+  });
+  const [f, setF] = useState(EMPTY_PARCEL);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!f.parcel_id.trim()) { toast.error("Parcel ID is required."); return; }
+    const row = {
+      parcel_id: f.parcel_id.trim(),
+      address: f.address.trim() || null,
+      lat: f.lat ? Number(f.lat) : null,
+      lng: f.lng ? Number(f.lng) : null,
+      status: f.status,
+      status_detail: f.status_detail.trim() || null,
+      owner_name: f.owner_name.trim() || null,
+      source: "Manual entry",
+      source_url: f.source_url.trim() || null,
+      manual_override: true,
+      last_synced_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from("building_status").upsert(row, { onConflict: "parcel_id" });
+    if (error) { toast.error("Couldn't save the parcel."); return; }
+    toast.success("Parcel saved");
+    setF(EMPTY_PARCEL);
+    qc.invalidateQueries({ queryKey: ["manual-parcels"] });
+  }
+
+  const field = (k: keyof typeof EMPTY_PARCEL, label: string) => (
+    <div className="space-y-1">
+      <Label htmlFor={`mp-${k}`}>{label}</Label>
+      <Input id={`mp-${k}`} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
+    </div>
+  );
+
+  return (
+    <div className="mt-6 grid gap-8 md:grid-cols-2">
+      <form onSubmit={save} className="space-y-3 rounded-xl border bg-card p-5">
+        <h2 className="font-semibold">Add or edit a parcel</h2>
+        <p className="text-sm text-muted-foreground">Manual entries set the override flag, so open-data syncs leave them alone.</p>
+        {field("parcel_id", "Parcel ID")}
+        {field("address", "Address")}
+        <div className="grid grid-cols-2 gap-3">{field("lat", "Latitude")}{field("lng", "Longitude")}</div>
+        <div className="space-y-1">
+          <Label htmlFor="mp-status">Status</Label>
+          <select id="mp-status" className="w-full rounded-md border bg-background p-2" value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}>
+            <option value="for_sale_private">For sale (private)</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="retired">Retired / demolished</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </div>
+        {field("status_detail", "Details (e.g. asking price, agent)")}
+        {field("owner_name", "Owner name (optional)")}
+        {field("source_url", "Listing URL (optional)")}
+        <Button type="submit">Save parcel</Button>
+      </form>
+      <ul className="space-y-2">
+        {data?.map((r) => (
+          <li key={r.parcel_id} className="rounded-lg border p-3">
+            <button
+              className="w-full text-left"
+              onClick={() =>
+                setF({
+                  parcel_id: r.parcel_id, address: r.address ?? "", lat: r.lat != null ? String(r.lat) : "",
+                  lng: r.lng != null ? String(r.lng) : "", status: r.status, status_detail: r.status_detail ?? "",
+                  owner_name: r.owner_name ?? "", source_url: r.source_url ?? "",
+                })
+              }
+            >
+              <span className="eyebrow">{r.status}</span>
+              <span className="block font-medium">{r.address ?? r.parcel_id}</span>
+            </button>
+          </li>
+        ))}
+        {data?.length === 0 && <li className="text-sm text-muted-foreground">No manual parcels yet.</li>}
+      </ul>
+    </div>
   );
 }
