@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,12 +21,24 @@ export const Route = createFileRoute("/login")({
 });
 
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"link" | "password">("link");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setState("sending");
+    if (mode === "password") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setState("error");
+      } else {
+        navigate({ to: "/projects" });
+      }
+      return;
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${window.location.origin}/projects` },
@@ -38,7 +50,9 @@ function Login() {
     <div className="mx-auto max-w-md px-6 py-24">
       <p className="eyebrow">Sign in</p>
       <h1 className="mt-2 text-3xl font-bold">We'll email you a link</h1>
-      <p className="mt-2 text-muted-foreground">No password needed. Your projects stay private to your account.</p>
+      <p className="mt-2 text-muted-foreground">
+        {mode === "link" ? "No password needed. Your projects stay private to your account." : "Sign in with your email and password."}
+      </p>
       {state === "sent" ? (
         <div role="status" className="mt-8 rounded-lg border bg-amber-soft p-5">
           <Mail className="h-5 w-5 text-primary" aria-hidden />
@@ -51,10 +65,27 @@ function Login() {
             <Label htmlFor="email">Email address</Label>
             <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" />
           </div>
-          {state === "error" && <p role="alert" className="text-sm text-destructive">We couldn't send the link. Please try again in a minute.</p>}
+          {mode === "password" && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="h-11" autoComplete="current-password" />
+            </div>
+          )}
+          {state === "error" && (
+            <p role="alert" className="text-sm text-destructive">
+              {mode === "password" ? "We couldn't sign you in. Check your email and password and try again." : "We couldn't send the link. Please try again in a minute."}
+            </p>
+          )}
           <Button type="submit" className="h-11 w-full" disabled={state === "sending"}>
-            {state === "sending" ? "Sending…" : "Email me a sign-in link"}
+            {state === "sending" ? (mode === "password" ? "Signing in…" : "Sending…") : mode === "password" ? "Sign in" : "Email me a sign-in link"}
           </Button>
+          <button
+            type="button"
+            onClick={() => { setMode(mode === "link" ? "password" : "link"); setState("idle"); }}
+            className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            {mode === "link" ? "Sign in with password instead" : "Sign in with an email link instead"}
+          </button>
         </form>
       )}
     </div>
